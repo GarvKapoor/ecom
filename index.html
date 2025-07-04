@@ -3,63 +3,60 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Manpasand - Trendy Clothing</title>
+  <title>Manpasand - Your Fashion Store</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <header>
+  <!-- Header with search and login -->
+  <header class="header">
     <div class="logo">Manpasand</div>
-    <nav>
-      <a href="#">Home</a>
-      <a href="#">Shop</a>
-      <a href="#">About</a>
-      <a href="#">Contact</a>
+    <input type="text" class="search-bar" placeholder="Search for clothes...">
+    <div class="header-buttons">
       <button onclick="openModal()">Login / Sign Up</button>
-    </nav>
+      <button>🛒 Cart (0)</button>
+    </div>
   </header>
 
-  <section class="hero">
-    <h1>Welcome to Manpasand</h1>
-    <p>Pastel Perfection Meets Trendy Style</p>
-    <a href="#" class="btn">Shop Now</a>
+  <!-- Category Banner -->
+  <section class="banner">
+    <h1>Trendy & Affordable Clothing</h1>
+    <p>Pastel Styles. Premium Comfort.</p>
   </section>
 
-  <section class="products">
-    <h2>Our Collection</h2>
+  <!-- Product Grid -->
+  <section class="product-list">
+    <h2>Featured Products</h2>
     <div class="product-grid">
-      <div class="product">
-        <img src="placeholder.jpg" alt="Product Image">
-        <h3>Trendy Pastel Hoodie</h3>
+      <div class="product-card">
+        <img src="placeholder.jpg" alt="Hoodie">
+        <h3>Pastel Hoodie</h3>
         <p>₹1,499</p>
-        <button>Buy Now</button>
+        <button>Add to Cart</button>
       </div>
-      <!-- More product cards to be added -->
+      <div class="product-card">
+        <img src="placeholder.jpg" alt="Tee">
+        <h3>Oversized T-Shirt</h3>
+        <p>₹799</p>
+        <button>Add to Cart</button>
+      </div>
+      <!-- More products -->
     </div>
   </section>
 
-  <section class="payment-options">
-    <h2>Payment Options</h2>
-    <p>We accept Paytm, Bank Transfer & Credit Cards</p>
-    <div class="payment-buttons">
-      <button class="pay-btn">Pay via Paytm</button>
-      <button class="pay-btn">Bank Transfer</button>
-      <button class="pay-btn">Credit Card</button>
-    </div>
-  </section>
-
+  <!-- Footer -->
   <footer>
-    <p>&copy; 2025 Manpasand. All rights reserved.</p>
+    <p>&copy; 2025 Manpasand. All Rights Reserved.</p>
   </footer>
 
-  <!-- Login/Signup Modal -->
+  <!-- Modal for Login/Signup -->
   <div id="modal" class="modal">
     <div class="modal-content">
       <span onclick="closeModal()" class="close">&times;</span>
-      <h2>Login / Sign Up</h2>
+      <h2>Login or Sign Up</h2>
       <input type="email" placeholder="Email" />
       <input type="password" placeholder="Password" />
-      <button>Submit</button>
+      <button>Continue</button>
     </div>
   </div>
 
