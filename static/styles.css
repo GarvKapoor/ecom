@@ -107,7 +107,7 @@ body {
   max-width: 650px;      /* Decreased maximum width */
   margin: 0;
   opacity: 0;
-  pointer-events: none;
+  cursor: pointer;
   display: none;
 }
 
