@@ -87,10 +87,10 @@ function closeImgPreview() {
 document.addEventListener("DOMContentLoaded", () => {
   const galleryContainer = document.getElementById('galleryContainer');
   
-  // Use event delegation to handle clicks on dynamically shown images
+  // Use event delegation to handle clicks on any product image
   galleryContainer.addEventListener('click', (e) => {
-    if (e.target.tagName === 'IMG' && e.target.classList.contains('lazy')) {
-      // Use data-src for lazy images, src for loaded images
+    if (e.target.tagName === 'IMG') {
+      // Use src if available, otherwise fallback to data-src
       const imgSrc = e.target.src || e.target.dataset.src;
       if (imgSrc) {
         openImgPreview(imgSrc);
