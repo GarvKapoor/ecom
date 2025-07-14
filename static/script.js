@@ -67,9 +67,15 @@ function openImgPreview(src) {
     document.body.appendChild(modal);
   } else {
     modal.querySelector('img').src = src;
-    modal.style.display = 'block';
   }
   modal.style.display = 'block';
+  
+  // Close modal when clicking outside the image
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      closeImgPreview();
+    }
+  });
 }
 
 function closeImgPreview() {
@@ -77,14 +83,30 @@ function closeImgPreview() {
   if (modal) modal.style.display = 'none';
 }
 
-// Attach click event to product images
+// Attach click event to product images using event delegation
 document.addEventListener("DOMContentLoaded", () => {
+  const galleryContainer = document.getElementById('galleryContainer');
+  
+  // Use event delegation to handle clicks on dynamically shown images
+  galleryContainer.addEventListener('click', (e) => {
+    if (e.target.tagName === 'IMG' && e.target.classList.contains('lazy')) {
+      // Use data-src for lazy images, src for loaded images
+      const imgSrc = e.target.src || e.target.dataset.src;
+      if (imgSrc) {
+        openImgPreview(imgSrc);
+      }
+    }
+  });
+  
+  // Handle image load events for fade-in effect
+  galleryContainer.addEventListener('load', (e) => {
+    if (e.target.tagName === 'IMG') {
+      e.target.classList.add('loaded');
+    }
+  }, true);
+  
+  // Check for already cached images
   document.querySelectorAll('.product-card img').forEach(img => {
-    img.addEventListener('click', () => openImgPreview(img.src));
-    img.addEventListener('load', () => {
-      img.classList.add('loaded');
-    });
-    // If already cached
     if (img.complete) {
       img.classList.add('loaded');
     }
