@@ -75,6 +75,7 @@ body {
 .product-list {
   padding: 2rem;
   text-align: center;
+  position: relative;
 }
 
 .product-grid {
@@ -520,7 +521,7 @@ footer {
 }
 .arrow {
   position: absolute;
-  top: 50%;
+  top: 60%;
   transform: translateY(-50%);
   font-size: 2rem;
   background: #ff6f91;
