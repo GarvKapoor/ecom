@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gallery</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <script defer src="{{ url_for('static', filename='script.js') }}"></script>
+</head>
+<body>
+  <section id="hero" class="fullscreen-hero">
+    <div class="hero-header">
+      <button class="hero-btn left" onclick="openModal()">Login</button>
+      <div class="logo">Manpasand</div>
+      <button class="hero-btn right" id="cart" onclick="openModal()">🛒 Cart (0)</button>
+    </div>
+    <div class="hero-center">
+      <input type="text" class="search-bar" placeholder="search">
+      <h1 class="hero-title">Trendy &amp; Affordable Clothing</h1>
+      <p class="hero-sub">Scroll through our latest collections</p>
+      <button class="explore-btn" onclick="scrollToProducts()">Explore</button>
+    </div>
+  </section>
+
+  <div class="banner">
+    <h1>Our Latest Collection</h1>
+  </div>
+
+  <div class="product-list">
+    <div class="product-grid" id="galleryContainer">
+      {% for img in images %}
+      <div class="product-card">
+        <img data-src="{{ img }}" alt="Product Image" class="lazy">
+        <div class="product-card-details">
+          <h3>Reyon Fabric Kaftans</h3>
+          <div class="product-price">₹1095</div>
+          <div class="product-sizes">
+            <button class="size-btn">S</button>
+            <button class="size-btn">M</button>
+            <button class="size-btn">L</button>
+            <button class="size-btn">XL</button>
+          </div>
+          <button class="addcart">Add to Cart</button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <button class="arrow left" onclick="scrollGallery(-1)">&lt;</button>
+    <button class="arrow right" onclick="scrollGallery(1)">&gt;</button>
+  </div>
+
+  <!-- Image Preview Modal (created by JS) -->
+
+  <footer>
+    &copy; 2025 Manpasand. All rights reserved.
+  </footer>
+</body>
+</html>
