@@ -26,6 +26,7 @@
   </div>
 
   <div class="product-list">
+    <button class="arrow left" onclick="scrollGallery(-1)">&lt;</button>
     <div class="product-grid" id="galleryContainer">
       {% for img in images %}
       <div class="product-card">
@@ -41,13 +42,10 @@
           </div>
           <button class="addcart">Add to Cart</button>
         </div>
-        
       </div>
-      <button class="arrow right" onclick="scrollGallery(1)">&gt;</button>
       {% endfor %}
     </div>
-    <button class="arrow left" onclick="scrollGallery(-1)">&lt;</button>
-    
+    <button class="arrow right" onclick="scrollGallery(1)">&gt;</button>
   </div>
 
   <!-- Image Preview Modal (created by JS) -->
