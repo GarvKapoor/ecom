@@ -307,7 +307,7 @@ function renderCartItems(cartItems) {
 			})">+</button>
 				<button class="remove-btn" onclick="removeFromCart('${
 					item.id
-				}')">Remove</button>
+				}')" title="Remove item">×</button>
 			</div>
 		</div>
 	`
