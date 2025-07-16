@@ -165,6 +165,9 @@ document.addEventListener("DOMContentLoaded", () => {
 			}
 		}
 	});
+
+	// Load cart count on page load
+	updateCartCount();
 });
 
 // Add to Cart functionality
@@ -182,44 +185,265 @@ function addToCart(button) {
 
 	const selectedSize = selectedSizeBtn.dataset.size;
 	const selectedPrice = selectedSizeBtn.dataset.price;
+	const imageUrl =
+		productCard.querySelector("img").dataset.src ||
+		productCard.querySelector("img").src;
 
 	// Create cart item
 	const cartItem = {
 		name: productName,
 		size: selectedSize,
 		price: selectedPrice,
+		image_url: imageUrl,
 		quantity: 1,
-		image:
-			productCard.querySelector("img").dataset.src ||
-			productCard.querySelector("img").src,
 	};
 
-	// Add to cart (you can implement actual cart logic here)
-	console.log("Adding to cart:", cartItem);
+	// Add to cart via API
+	fetch("/cart/add", {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify(cartItem),
+	})
+		.then((response) => response.json())
+		.then((data) => {
+			if (data.success) {
+				// Show feedback
+				button.textContent = "Added!";
+				button.style.backgroundColor = "#4CAF50";
 
-	// Show feedback
-	button.textContent = "Added!";
-	button.style.backgroundColor = "#4CAF50";
+				setTimeout(() => {
+					button.textContent = "Add to Cart";
+					button.style.backgroundColor = "";
+				}, 1500);
 
-	setTimeout(() => {
-		button.textContent = "Add to Cart";
-		button.style.backgroundColor = "";
-	}, 1500);
-
-	// Update cart count (placeholder)
-	updateCartCount();
+				// Update cart count
+				updateCartCount();
+			} else {
+				alert("Error adding item to cart: " + data.error);
+			}
+		})
+		.catch((error) => {
+			console.error("Error:", error);
+			alert("Error adding item to cart");
+		});
 }
 
 // Update cart count in header
 function updateCartCount() {
-	const cartBtn = document.getElementById("cart");
-	if (cartBtn) {
-		const currentCount = parseInt(cartBtn.textContent.match(/\d+/)[0]) || 0;
-		cartBtn.textContent = `🛒 Cart (${currentCount + 1})`;
+	fetch("/cart/get")
+		.then((response) => response.json())
+		.then((data) => {
+			const cartCountElement = document.getElementById("cart-count");
+			if (cartCountElement) {
+				cartCountElement.textContent = data.total_items;
+			}
+		})
+		.catch((error) => {
+			console.error("Error updating cart count:", error);
+		});
+}
+
+// Cart Modal Functions
+function openCartModal() {
+	const modal = document.getElementById("cartModal");
+	modal.style.display = "block";
+	loadCartItems();
+}
+
+function closeCartModal() {
+	const modal = document.getElementById("cartModal");
+	modal.style.display = "none";
+}
+
+function loadCartItems() {
+	fetch("/cart/get")
+		.then((response) => response.json())
+		.then((data) => {
+			renderCartItems(data.cart);
+			updateCartSummary(data);
+		})
+		.catch((error) => {
+			console.error("Error loading cart:", error);
+		});
+}
+
+function renderCartItems(cartItems) {
+	const container = document.getElementById("cart-items-container");
+
+	if (cartItems.length === 0) {
+		container.innerHTML = `
+			<div class="empty-cart">
+				<div class="empty-cart-icon">🛒</div>
+				<h3>Your cart is empty</h3>
+				<p>Add some items to get started!</p>
+			</div>
+		`;
+		return;
 	}
+
+	container.innerHTML = cartItems
+		.map(
+			(item) => `
+		<div class="cart-item">
+			<input type="checkbox" class="cart-item-checkbox" 
+				   ${item.selected ? "checked" : ""} 
+				   onchange="toggleItemSelection('${item.id}', this.checked)">
+			<img src="${item.image_url}" alt="${item.name}" class="cart-item-image">
+			<div class="cart-item-details">
+				<div class="cart-item-name">${item.name}</div>
+				<div class="cart-item-info">Size: ${item.size}</div>
+				<div class="cart-item-price">₹${item.price}</div>
+			</div>
+			<div class="cart-item-controls">
+				<button class="quantity-btn" onclick="updateQuantity('${item.id}', ${
+				item.quantity - 1
+			})">-</button>
+				<input type="number" class="quantity-input" value="${item.quantity}" min="1" 
+					   onchange="updateQuantity('${item.id}', this.value)">
+				<button class="quantity-btn" onclick="updateQuantity('${item.id}', ${
+				item.quantity + 1
+			})">+</button>
+				<button class="remove-btn" onclick="removeFromCart('${
+					item.id
+				}')">Remove</button>
+			</div>
+		</div>
+	`
+		)
+		.join("");
+}
+
+function updateCartSummary(data) {
+	document.getElementById("selected-count").textContent = data.selected_items;
+	document.getElementById("total-amount").textContent = `₹${data.total_amount}`;
+
+	const checkoutBtn = document.getElementById("checkout-btn");
+	checkoutBtn.disabled = data.selected_items === 0;
+}
+
+function toggleItemSelection(itemId, selected) {
+	fetch("/cart/update", {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({
+			id: itemId,
+			selected: selected,
+		}),
+	})
+		.then((response) => response.json())
+		.then((data) => {
+			if (data.success) {
+				loadCartItems(); // Refresh cart
+			}
+		})
+		.catch((error) => {
+			console.error("Error updating item:", error);
+		});
+}
+
+function updateQuantity(itemId, newQuantity) {
+	newQuantity = parseInt(newQuantity);
+	if (newQuantity < 1) return;
+
+	fetch("/cart/update", {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({
+			id: itemId,
+			quantity: newQuantity,
+		}),
+	})
+		.then((response) => response.json())
+		.then((data) => {
+			if (data.success) {
+				loadCartItems(); // Refresh cart
+				updateCartCount(); // Update header count
+			}
+		})
+		.catch((error) => {
+			console.error("Error updating quantity:", error);
+		});
+}
+
+function removeFromCart(itemId) {
+	if (!confirm("Are you sure you want to remove this item?")) return;
+
+	fetch("/cart/remove", {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({
+			id: itemId,
+		}),
+	})
+		.then((response) => response.json())
+		.then((data) => {
+			if (data.success) {
+				loadCartItems(); // Refresh cart
+				updateCartCount(); // Update header count
+			}
+		})
+		.catch((error) => {
+			console.error("Error removing item:", error);
+		});
+}
+
+function clearCart() {
+	if (!confirm("Are you sure you want to clear the entire cart?")) return;
+
+	fetch("/cart/clear", {
+		method: "POST",
+	})
+		.then((response) => response.json())
+		.then((data) => {
+			if (data.success) {
+				loadCartItems(); // Refresh cart
+				updateCartCount(); // Update header count
+			}
+		})
+		.catch((error) => {
+			console.error("Error clearing cart:", error);
+		});
+}
+
+function proceedToCheckout() {
+	fetch("/cart/checkout", {
+		method: "POST",
+	})
+		.then((response) => response.json())
+		.then((data) => {
+			if (data.success) {
+				alert(
+					`Order created successfully! Order ID: ${data.order_id}\\nTotal: ₹${data.total_amount}\\n\\n${data.message}`
+				);
+				// In a real app, you would redirect to the payment gateway
+				// window.location.href = data.redirect_url;
+			} else {
+				alert("Error processing checkout: " + data.error);
+			}
+		})
+		.catch((error) => {
+			console.error("Error during checkout:", error);
+			alert("Error during checkout");
+		});
 }
 
 // Modal functionality placeholder
 function openModal() {
-	alert("Modal functionality not implemented yet!");
+	alert("Login functionality not implemented yet!");
 }
+
+// Close modal when clicking outside
+window.onclick = function (event) {
+	const cartModal = document.getElementById("cartModal");
+	if (event.target === cartModal) {
+		closeCartModal();
+	}
+};

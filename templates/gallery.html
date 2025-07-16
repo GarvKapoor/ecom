@@ -14,8 +14,8 @@
 			<div class="hero-header">
 				<button class="hero-btn left" onclick="openModal()">Login</button>
 				<div class="logo">Manpasand</div>
-				<button class="hero-btn right" id="cart" onclick="openModal()">
-					🛒 Cart (0)
+				<button class="hero-btn right" id="cart" onclick="openCartModal()">
+					🛒 Cart (<span id="cart-count">0</span>)
 				</button>
 			</div>
 			<div class="hero-center">
@@ -76,6 +76,46 @@
 				{% endfor %}
 			</div>
 			<button class="arrow right" onclick="scrollGallery(1)">&gt;</button>
+		</div>
+
+		<!-- Cart Modal -->
+		<div id="cartModal" class="modal">
+			<div class="modal-content cart-modal">
+				<div class="modal-header">
+					<h2>Shopping Cart</h2>
+					<button class="close-btn" onclick="closeCartModal()">&times;</button>
+				</div>
+
+				<div class="modal-body">
+					<div id="cart-items-container">
+						<!-- Cart items will be populated here -->
+					</div>
+
+					<div class="cart-summary">
+						<div class="summary-row">
+							<span>Selected Items:</span>
+							<span id="selected-count">0</span>
+						</div>
+						<div class="summary-row">
+							<span>Total Amount:</span>
+							<span id="total-amount">₹0</span>
+						</div>
+					</div>
+				</div>
+
+				<div class="modal-footer">
+					<button class="btn secondary" onclick="clearCart()">
+						Clear Cart
+					</button>
+					<button
+						class="btn primary"
+						id="checkout-btn"
+						onclick="proceedToCheckout()"
+					>
+						Proceed to Checkout
+					</button>
+				</div>
+			</div>
 		</div>
 
 		<!-- Image Preview Modal (created by JS) -->

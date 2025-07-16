@@ -1,14 +1,17 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, session
 import requests
 import os
 from dotenv import load_dotenv
 import re
 import base64
+from datetime import datetime
+import uuid
 
 # Load environment variables from .env
 load_dotenv()
 
 app = Flask(__name__)
+app.secret_key = os.getenv('SECRET_KEY', 'your-secret-key-here')  # Add this to .env file
 
 # ===========================
 # Helper function to parse product info from filename
@@ -146,6 +149,167 @@ def gallery():
         images = []
 
     return render_template('gallery.html', images=images)
+
+# ===========================
+# Cart Management Routes
+# ===========================
+
+def init_cart():
+    """Initialize cart in session if it doesn't exist"""
+    if 'cart' not in session:
+        session['cart'] = []
+    return session['cart']
+
+@app.route('/cart/add', methods=['POST'])
+def add_to_cart():
+    """Add item to cart"""
+    data = request.get_json()
+    
+    required_fields = ['name', 'size', 'price', 'image_url']
+    if not all(field in data for field in required_fields):
+        return jsonify({'error': 'Missing required fields'}), 400
+    
+    cart = init_cart()
+    
+    # Create cart item
+    cart_item = {
+        'id': str(uuid.uuid4()),
+        'name': data['name'],
+        'size': data['size'],
+        'price': float(data['price']),
+        'image_url': data['image_url'],
+        'quantity': int(data.get('quantity', 1)),
+        'selected': True,  # Default to selected
+        'added_at': datetime.now().isoformat()
+    }
+    
+    # Check if item already exists (same name and size)
+    existing_item = None
+    for item in cart:
+        if item['name'] == cart_item['name'] and item['size'] == cart_item['size']:
+            existing_item = item
+            break
+    
+    if existing_item:
+        # Update quantity of existing item
+        existing_item['quantity'] += cart_item['quantity']
+    else:
+        # Add new item to cart
+        cart.append(cart_item)
+    
+    session['cart'] = cart
+    session.permanent = True
+    
+    return jsonify({
+        'success': True,
+        'cart_count': len(cart),
+        'total_items': sum(item['quantity'] for item in cart)
+    })
+
+@app.route('/cart/get', methods=['GET'])
+def get_cart():
+    """Get cart contents"""
+    cart = init_cart()
+    
+    total_amount = sum(item['price'] * item['quantity'] for item in cart if item['selected'])
+    total_items = sum(item['quantity'] for item in cart)
+    selected_items = sum(item['quantity'] for item in cart if item['selected'])
+    
+    return jsonify({
+        'cart': cart,
+        'total_amount': total_amount,
+        'total_items': total_items,
+        'selected_items': selected_items,
+        'cart_count': len(cart)
+    })
+
+@app.route('/cart/update', methods=['POST'])
+def update_cart():
+    """Update cart item quantity or selection"""
+    data = request.get_json()
+    cart = init_cart()
+    
+    item_id = data.get('id')
+    if not item_id:
+        return jsonify({'error': 'Item ID required'}), 400
+    
+    # Find item in cart
+    item = None
+    for cart_item in cart:
+        if cart_item['id'] == item_id:
+            item = cart_item
+            break
+    
+    if not item:
+        return jsonify({'error': 'Item not found in cart'}), 404
+    
+    # Update item properties
+    if 'quantity' in data:
+        new_quantity = int(data['quantity'])
+        if new_quantity <= 0:
+            cart.remove(item)
+        else:
+            item['quantity'] = new_quantity
+    
+    if 'selected' in data:
+        item['selected'] = bool(data['selected'])
+    
+    session['cart'] = cart
+    
+    return jsonify({'success': True})
+
+@app.route('/cart/remove', methods=['POST'])
+def remove_from_cart():
+    """Remove item from cart"""
+    data = request.get_json()
+    cart = init_cart()
+    
+    item_id = data.get('id')
+    if not item_id:
+        return jsonify({'error': 'Item ID required'}), 400
+    
+    # Remove item from cart
+    cart = [item for item in cart if item['id'] != item_id]
+    session['cart'] = cart
+    
+    return jsonify({'success': True, 'cart_count': len(cart)})
+
+@app.route('/cart/clear', methods=['POST'])
+def clear_cart():
+    """Clear all items from cart"""
+    session['cart'] = []
+    return jsonify({'success': True})
+
+@app.route('/cart/checkout', methods=['POST'])
+def checkout():
+    """Process checkout (placeholder for payment gateway integration)"""
+    cart = init_cart()
+    selected_items = [item for item in cart if item['selected']]
+    
+    if not selected_items:
+        return jsonify({'error': 'No items selected for checkout'}), 400
+    
+    # Calculate totals
+    total_amount = sum(item['price'] * item['quantity'] for item in selected_items)
+    
+    # Create order data (this would typically be saved to a database)
+    order_data = {
+        'order_id': str(uuid.uuid4()),
+        'items': selected_items,
+        'total_amount': total_amount,
+        'order_date': datetime.now().isoformat(),
+        'status': 'pending_payment'
+    }
+    
+    # TODO: Integrate with payment gateway (Razorpay, Stripe, etc.)
+    
+    return jsonify({
+        'success': True,
+        'order_id': order_data['order_id'],
+        'total_amount': total_amount,
+        'redirect_url': '/payment',  # Replace with actual payment gateway URL
+        'message': 'Redirecting to payment gateway...'
+    })
 
 # ===========================
 # Upload route to upload image to GitHub repo
