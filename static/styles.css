@@ -185,6 +185,31 @@ body {
 .size-btn.active {
 	background: #ff1744;
 	transform: scale(1.05);
+	box-shadow: 0 4px 12px rgba(255, 23, 68, 0.3);
+}
+
+.product-card {
+	transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.product-card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.product-card-details h3 {
+	color: #333;
+	margin-bottom: 0.5rem;
+	font-size: 1.1rem;
+	font-weight: 600;
+}
+
+.product-price {
+	font-size: 1.3rem;
+	font-weight: bold;
+	color: #ff6f91;
+	margin-bottom: 0.8rem;
+	transition: color 0.3s ease;
 }
 
 .addcart {

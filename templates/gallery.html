@@ -36,10 +36,14 @@
 			<button class="arrow left" onclick="scrollGallery(-1)">&lt;</button>
 			<div class="product-grid" id="galleryContainer">
 				{% for product in images %}
-				<div class="product-card">
+				<div
+					class="product-card"
+					data-product-name="{{ product.name }}"
+					data-base-price="{{ product.price }}"
+				>
 					<img
 						data-src="{{ product.image_url }}"
-						alt="Product Image"
+						alt="{{ product.name }}"
 						class="lazy"
 					/>
 					<div class="product-card-details">
@@ -47,14 +51,26 @@
 						<div class="product-price">₹{{ product.price }}</div>
 						<div class="product-sizes">
 							{% for size in product.sizes %}
-							<button class="size-btn" data-price="{{ size.price }}">
+							<button
+								class="size-btn"
+								data-price="{{ size.price }}"
+								data-size="{{ size.label }}"
+							>
 								{{ size.label }}
 							</button>
 							{% endfor %} {% if not product.sizes %}
-							<button class="size-btn">One Size</button>
+							<button
+								class="size-btn"
+								data-price="{{ product.price }}"
+								data-size="One Size"
+							>
+								One Size
+							</button>
 							{% endif %}
 						</div>
-						<button class="addcart">Add to Cart</button>
+						<button class="addcart" onclick="addToCart(this)">
+							Add to Cart
+						</button>
 					</div>
 				</div>
 				{% endfor %}

@@ -149,4 +149,69 @@ document.addEventListener("DOMContentLoaded", () => {
 			}
 		}
 	});
+
+	// Auto-select first size button for single-size products
+	document.querySelectorAll(".product-card").forEach((card) => {
+		const sizeBtns = card.querySelectorAll(".size-btn");
+		if (sizeBtns.length === 1) {
+			sizeBtns[0].classList.add("active");
+		}
+	});
 });
+
+// Add to Cart functionality
+function addToCart(button) {
+	const productCard = button.closest(".product-card");
+	const productName = productCard.dataset.productName;
+	const basePrice = productCard.dataset.basePrice;
+
+	// Get selected size
+	const selectedSizeBtn = productCard.querySelector(".size-btn.active");
+	if (!selectedSizeBtn) {
+		alert("Please select a size first!");
+		return;
+	}
+
+	const selectedSize = selectedSizeBtn.dataset.size;
+	const selectedPrice = selectedSizeBtn.dataset.price;
+
+	// Create cart item
+	const cartItem = {
+		name: productName,
+		size: selectedSize,
+		price: selectedPrice,
+		quantity: 1,
+		image:
+			productCard.querySelector("img").dataset.src ||
+			productCard.querySelector("img").src,
+	};
+
+	// Add to cart (you can implement actual cart logic here)
+	console.log("Adding to cart:", cartItem);
+
+	// Show feedback
+	button.textContent = "Added!";
+	button.style.backgroundColor = "#4CAF50";
+
+	setTimeout(() => {
+		button.textContent = "Add to Cart";
+		button.style.backgroundColor = "";
+	}, 1500);
+
+	// Update cart count (placeholder)
+	updateCartCount();
+}
+
+// Update cart count in header
+function updateCartCount() {
+	const cartBtn = document.getElementById("cart");
+	if (cartBtn) {
+		const currentCount = parseInt(cartBtn.textContent.match(/\d+/)[0]) || 0;
+		cartBtn.textContent = `🛒 Cart (${currentCount + 1})`;
+	}
+}
+
+// Modal functionality placeholder
+function openModal() {
+	alert("Modal functionality not implemented yet!");
+}
