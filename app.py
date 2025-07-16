@@ -53,27 +53,44 @@ def upload_image():
     sizes = data.get('sizes')
     image_base64 = data.get('image_base64')
 
+    # ✅ Check required fields
     if not all([name, price, sizes, image_base64]):
         return jsonify({'error': 'Missing required fields'}), 400
 
-    # Format filename: Name_Price_Sizes.extension
-    filename_base = f"{name}_{price}_{sizes.replace(',', '_')}"
+    # ✅ Validate sizes format: expect comma-separated list like "S:500,M:700"
+    try:
+        for item in sizes.split(','):
+            size_label, size_price = item.split(':')
+            float(size_price)  # ensure it's a number
+    except Exception:
+        return jsonify({'error': 'Invalid sizes format. Expected: S:500,M:700'}), 400
 
-    # Detect extension from base64 header
+    # ✅ Sanitize sizes for filename (remove special characters)
+    safe_sizes = re.sub(r'[^a-zA-Z0-9_]', '_', sizes)
+    filename_base = f"{name}_{price}_{safe_sizes}"
+
+    # ✅ Detect extension from base64 header
     match = re.match(r'^data:image/(\w+);base64,', image_base64)
     if match:
         ext = match.group(1)
         image_data = base64.b64decode(image_base64.split(',')[1])
     else:
-        ext = 'png'  # Default to PNG
+        ext = 'png'  # Default to PNG if header is missing
         image_data = base64.b64decode(image_base64)
+
+    # ✅ Debug: Log image size
+    print(f"Uploading image of size: {len(image_data) / 1024:.2f} KB")
 
     filename = f"{filename_base}.{ext}"
 
-    # GitHub API upload
+    # ✅ GitHub Upload
     owner = 'GarvKapoor'
     repo = 'ecom-pics'
     token = os.getenv('GITHUB_TOKEN')
+
+    if not token:
+        return jsonify({'error': 'GitHub token not set'}), 500
+
     api_url = f'https://api.github.com/repos/{owner}/{repo}/contents/{filename}'
     headers = {'Authorization': f'token {token}'}
 
@@ -88,8 +105,8 @@ def upload_image():
     if response.status_code in [200, 201]:
         return jsonify({'success': True, 'filename': filename}), 201
     else:
-        # Return GitHub API error response for debugging
-        return jsonify({'error': response.json()}), response.status_code
+        error_info = response.json().get('message', 'Unknown GitHub error')
+        return jsonify({'error': f'GitHub upload failed: {error_info}'}), response.status_code
 
 # ===========================
 # Run locally (development only)
