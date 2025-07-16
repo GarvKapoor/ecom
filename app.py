@@ -11,6 +11,74 @@ load_dotenv()
 app = Flask(__name__)
 
 # ===========================
+# Helper function to parse product info from filename
+# ===========================
+def parse_product_info(filename):
+    """
+    Parse product information from filename format: {name}_{price}_{sizes}.{ext}
+    Example: "Reyon_Fabric_Kaftans_1095_S_500_M_700_L_800.jpg"
+    """
+    try:
+        # Remove file extension
+        name_without_ext = filename.rsplit('.', 1)[0]
+        
+        # Split by underscores
+        parts = name_without_ext.split('_')
+        
+        if len(parts) < 3:
+            # Fallback for malformed filenames
+            return {
+                'name': 'Unknown Product',
+                'price': '0',
+                'sizes': []
+            }
+        
+        # Find the price (first numeric part after product name)
+        price_index = -1
+        for i, part in enumerate(parts):
+            if part.isdigit():
+                price_index = i
+                break
+        
+        if price_index == -1:
+            # No price found, use defaults
+            name = ' '.join(parts)
+            price = '0'
+            sizes = []
+        else:
+            # Extract name (everything before price)
+            name = ' '.join(parts[:price_index])
+            price = parts[price_index]
+            
+            # Extract sizes (everything after price)
+            size_parts = parts[price_index + 1:]
+            sizes = []
+            
+            # Parse sizes in format: S, 500, M, 700, L, 800
+            for i in range(0, len(size_parts), 2):
+                if i + 1 < len(size_parts):
+                    size_label = size_parts[i]
+                    size_price = size_parts[i + 1]
+                    if size_price.isdigit():
+                        sizes.append({
+                            'label': size_label,
+                            'price': size_price
+                        })
+        
+        return {
+            'name': name,
+            'price': price,
+            'sizes': sizes
+        }
+    except Exception as e:
+        # Fallback for any parsing errors
+        return {
+            'name': filename.rsplit('.', 1)[0],
+            'price': '0',
+            'sizes': []
+        }
+
+# ===========================
 # Home route redirects to gallery
 # ===========================
 @app.route('/')
@@ -36,7 +104,11 @@ def gallery():
         images = []
         for file in data:
             if file['name'].lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
-                images.append(file['download_url'])
+                # Parse product information from filename
+                filename = file['name']
+                product_info = parse_product_info(filename)
+                product_info['image_url'] = file['download_url']
+                images.append(product_info)
     else:
         images = []
 
