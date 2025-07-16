@@ -16,7 +16,12 @@ app = Flask(__name__)
 def parse_product_info(filename):
     """
     Parse product information from filename format: {name}_{price}_{sizes}.{ext}
-    Example: "Reyon_Fabric_Kaftans_1095_S_500_M_700_L_800.jpg"
+    
+    Examples:
+    - "Reyon_Fabric_Kaftans_1095_S_500_M_700_L_800.jpg"
+    - "Cotton_Shirt_899_S_899_M_999_L_1099.png"
+    - "Simple_Dress_1500_OneSize_1500.jpg"
+    - "Denim_Jacket_2000_M_2000_L_2200_XL_2400.png"
     """
     try:
         # Remove file extension
@@ -25,57 +30,89 @@ def parse_product_info(filename):
         # Split by underscores
         parts = name_without_ext.split('_')
         
-        if len(parts) < 3:
+        if len(parts) < 2:
             # Fallback for malformed filenames
             return {
-                'name': 'Unknown Product',
+                'name': filename.rsplit('.', 1)[0],
                 'price': '0',
                 'sizes': []
             }
         
-        # Find the price (first numeric part after product name)
-        price_index = -1
+        # Strategy: Find the first numeric part which should be the base price
+        # Then parse alternating size labels and prices after that
+        base_price_index = -1
+        
+        # Look for the first numeric part (this should be the base price)
         for i, part in enumerate(parts):
             if part.isdigit():
-                price_index = i
+                base_price_index = i
                 break
         
-        if price_index == -1:
-            # No price found, use defaults
-            name = ' '.join(parts)
-            price = '0'
-            sizes = []
-        else:
-            # Extract name (everything before price)
-            name = ' '.join(parts[:price_index])
-            price = parts[price_index]
-            
-            # Extract sizes (everything after price)
-            size_parts = parts[price_index + 1:]
-            sizes = []
-            
-            # Parse sizes in format: S, 500, M, 700, L, 800
-            for i in range(0, len(size_parts), 2):
-                if i + 1 < len(size_parts):
-                    size_label = size_parts[i]
-                    size_price = size_parts[i + 1]
-                    if size_price.isdigit():
-                        sizes.append({
-                            'label': size_label,
-                            'price': size_price
-                        })
+        if base_price_index == -1:
+            # No numeric parts found, treat as name only
+            return {
+                'name': ' '.join(parts),
+                'price': '0',
+                'sizes': []
+            }
+        
+        # Extract product name (everything before base price)
+        name = ' '.join(parts[:base_price_index])
+        base_price = parts[base_price_index]
+        
+        # Extract sizes (everything after base price)
+        size_parts = parts[base_price_index + 1:]
+        sizes = []
+        
+        # Parse sizes in alternating format: size_label, size_price, size_label, size_price...
+        i = 0
+        while i < len(size_parts):
+            if i + 1 < len(size_parts):
+                size_label = size_parts[i]
+                size_price = size_parts[i + 1]
+                
+                # Check if the next part is a price (numeric)
+                if size_price.isdigit():
+                    sizes.append({
+                        'label': size_label,
+                        'price': size_price
+                    })
+                    i += 2
+                else:
+                    # If not a price, treat current part as size with base price
+                    sizes.append({
+                        'label': size_label,
+                        'price': base_price
+                    })
+                    i += 1
+            else:
+                # Odd number of parts, treat last part as size with base price
+                sizes.append({
+                    'label': size_parts[i],
+                    'price': base_price
+                })
+                i += 1
+        
+        # If no sizes found, create a default "One Size" entry
+        if not sizes:
+            sizes.append({
+                'label': 'One Size',
+                'price': base_price
+            })
         
         return {
-            'name': name,
-            'price': price,
+            'name': name if name else 'Unknown Product',
+            'price': base_price,
             'sizes': sizes
         }
+        
     except Exception as e:
         # Fallback for any parsing errors
+        print(f"Error parsing filename '{filename}': {e}")
         return {
             'name': filename.rsplit('.', 1)[0],
             'price': '0',
-            'sizes': []
+            'sizes': [{'label': 'One Size', 'price': '0'}]
         }
 
 # ===========================
