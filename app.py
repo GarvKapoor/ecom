@@ -15,13 +15,13 @@ app = Flask(__name__)
 # ===========================
 def parse_product_info(filename):
     """
-    Parse product information from filename format: {name}_{price}_{sizes}.{ext}
+    Parse product information from filename format: {name}_{size1}_{price1}_{size2}_{price2}...{ext}
     
     Examples:
-    - "Reyon_Fabric_Kaftans_1095_S_500_M_700_L_800.jpg"
-    - "Cotton_Shirt_899_S_899_M_999_L_1099.png"
-    - "Simple_Dress_1500_OneSize_1500.jpg"
-    - "Denim_Jacket_2000_M_2000_L_2200_XL_2400.png"
+    - "Beach_S_200_M_300_L_500.jpeg"
+    - "Cotton_Shirt_S_899_M_999_L_1099.png"
+    - "Simple_Dress_OneSize_1500.jpg"
+    - "Denim_Jacket_M_2000_L_2200_XL_2400.png"
     """
     try:
         # Remove file extension
@@ -30,38 +30,39 @@ def parse_product_info(filename):
         # Split by underscores
         parts = name_without_ext.split('_')
         
-        if len(parts) < 2:
-            # Fallback for malformed filenames
+        if len(parts) < 3:
+            # Fallback for malformed filenames (need at least name, size, price)
             return {
                 'name': filename.rsplit('.', 1)[0],
                 'price': '0',
-                'sizes': []
+                'sizes': [{'label': 'One Size', 'price': '0'}]
             }
         
-        # Strategy: Find the first numeric part which should be the base price
-        # Then parse alternating size labels and prices after that
-        base_price_index = -1
+        # Strategy: Find the first numeric part - this indicates where sizes start
+        # Everything before first numeric part is the product name
+        first_price_index = -1
         
-        # Look for the first numeric part (this should be the base price)
+        # Look for the first numeric part (this should be the first price)
         for i, part in enumerate(parts):
             if part.isdigit():
-                base_price_index = i
+                first_price_index = i
                 break
         
-        if base_price_index == -1:
-            # No numeric parts found, treat as name only
+        if first_price_index == -1 or first_price_index == 0:
+            # No numeric parts found or starts with number, treat as name only
             return {
                 'name': ' '.join(parts),
                 'price': '0',
-                'sizes': []
+                'sizes': [{'label': 'One Size', 'price': '0'}]
             }
         
-        # Extract product name (everything before base price)
-        name = ' '.join(parts[:base_price_index])
-        base_price = parts[base_price_index]
+        # Extract product name (everything before first price)
+        # The part before first price should be the size label
+        name_parts = parts[:first_price_index - 1]  # -1 because the part before price is size label
+        name = ' '.join(name_parts) if name_parts else 'Unknown Product'
         
-        # Extract sizes (everything after base price)
-        size_parts = parts[base_price_index + 1:]
+        # Extract sizes starting from the first size label
+        size_parts = parts[first_price_index - 1:]  # Include the size label before first price
         sizes = []
         
         # Parse sizes in alternating format: size_label, size_price, size_label, size_price...
@@ -79,26 +80,21 @@ def parse_product_info(filename):
                     })
                     i += 2
                 else:
-                    # If not a price, treat current part as size with base price
-                    sizes.append({
-                        'label': size_label,
-                        'price': base_price
-                    })
+                    # If not a price, something is wrong, skip this part
                     i += 1
             else:
-                # Odd number of parts, treat last part as size with base price
-                sizes.append({
-                    'label': size_parts[i],
-                    'price': base_price
-                })
+                # Odd number of parts, skip the last part
                 i += 1
         
-        # If no sizes found, create a default "One Size" entry
+        # If no sizes found, create a default "One Size" entry with 0 price
         if not sizes:
             sizes.append({
                 'label': 'One Size',
-                'price': base_price
+                'price': '0'
             })
+        
+        # Set the base price to the first size's price or 0
+        base_price = sizes[0]['price'] if sizes else '0'
         
         return {
             'name': name if name else 'Unknown Product',
@@ -168,15 +164,21 @@ def upload_image():
 
     # ✅ Validate sizes format: expect comma-separated list like "S:500,M:700"
     try:
+        size_data = []
         for item in sizes.split(','):
             size_label, size_price = item.split(':')
             float(size_price)  # ensure it's a number
+            size_data.append((size_label, size_price))
     except Exception:
         return jsonify({'error': 'Invalid sizes format. Expected: S:500,M:700'}), 400
 
-    # ✅ Sanitize sizes for filename (remove special characters)
-    safe_sizes = re.sub(r'[^a-zA-Z0-9_]', '_', sizes)
-    filename_base = f"{name}_{price}_{safe_sizes}"
+    # ✅ Create filename in new format: {name}_{size1}_{price1}_{size2}_{price2}...
+    filename_parts = [name]
+    for size_label, size_price in size_data:
+        filename_parts.append(size_label)
+        filename_parts.append(size_price)
+    
+    filename_base = '_'.join(filename_parts)
 
     # ✅ Detect extension from base64 header
     match = re.match(r'^data:image/(\w+);base64,', image_base64)

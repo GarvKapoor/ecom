@@ -155,6 +155,14 @@ document.addEventListener("DOMContentLoaded", () => {
 		const sizeBtns = card.querySelectorAll(".size-btn");
 		if (sizeBtns.length === 1) {
 			sizeBtns[0].classList.add("active");
+		} else if (sizeBtns.length > 1) {
+			// For multi-size products, select the first size and update price
+			sizeBtns[0].classList.add("active");
+			const firstSizePrice = sizeBtns[0].dataset.price;
+			if (firstSizePrice) {
+				const priceElement = card.querySelector(".product-price");
+				priceElement.textContent = `₹${firstSizePrice}`;
+			}
 		}
 	});
 });
