@@ -694,11 +694,11 @@ footer {
 }
 
 .cart-item-image {
-	width: 40px;
-	height: 40px;
+	width: 30px;
+	height: 30px;
 	object-fit: cover;
-	border-radius: 6px;
-	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+	border-radius: 4px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 	border: 1px solid #e0e0e0;
 	flex-shrink: 0;
 }
