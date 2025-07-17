@@ -15,7 +15,7 @@ Manpasand Clothing is a modern e-commerce web application built with Flask and o
 - **Backend:** Flask (Python)
 - **Frontend:** HTML, CSS, JavaScript
 - **Image Hosting:** GitHub
-- **Deployment:** Vercel
+- **Deployment:** Render
 
 ## Setup and Installation
 
@@ -59,9 +59,7 @@ To run this project locally, follow these steps:
 
 The application will be available at `http://127.0.0.1:5000`.
 
-## Deployment
 
-This application is deployed on Vercel. The `vercel.json` file contains the configuration for the deployment. Any push to the `main` branch will automatically trigger a new deployment.
 
 ## Contributing
 
