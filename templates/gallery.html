@@ -12,11 +12,13 @@
 	<body>
 		<section id="hero" class="fullscreen-hero">
 			<div class="hero-header">
-				<button class="hero-btn left" onclick="openModal()">Login</button>
 				<div class="logo">Manpasand</div>
-				<button class="hero-btn right" id="cart" onclick="openCartModal()">
-					🛒 Cart (<span id="cart-count">0</span>)
-				</button>
+				<div class="header-buttons">
+					<button class="hero-btn" onclick="openModal()">Login</button>
+					<button class="hero-btn" id="cart" onclick="openCartModal()">
+						🛒 Cart (<span id="cart-count">0</span>)
+					</button>
+				</div>
 			</div>
 			<div class="hero-center">
 				<input type="text" class="search-bar" placeholder="search" />
