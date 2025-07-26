@@ -46,13 +46,7 @@ To run this project locally, follow these steps:
    pip install -r requirements.txt
    ```
 
-5. **Create a `.env` file** in the root directory and add the following environment variables:
-   ```
-   GITHUB_TOKEN=your-github-token
-   SECRET_KEY=your-secret-key
-   ```
-
-6. **Run the application:**
+5. **Run the application:**
    ```bash
    python app.py
    ```
